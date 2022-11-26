@@ -1,0 +1,43 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity BCD is 
+    port (
+        INPUT : in std_logic_vector(3 downto 0);
+        OUTPUT: out std_logic_vector(6 downto 0)
+
+    );
+end entity BCD;
+
+architecture behavioral of BCD is
+
+    begin
+		  segment : process(INPUT) is
+		  begin
+        case (INPUT) is
+        -- A
+        when "0000" => OUTPUT <= "1110111";
+        -- B
+        when "0001" => OUTPUT <= "0011111";
+        -- C
+        when "0010" => OUTPUT <= "1001110";
+        -- D
+        when "0011" => OUTPUT <= "0111101";
+        -- E
+        when "0100" => OUTPUT <= "1001111";
+        -- F
+        when "0101" => OUTPUT <= "1000111";
+        -- G
+        when "0110" => OUTPUT <= "1011111";
+        -- H
+        when "0111" => OUTPUT <= "0110111";
+        -- I
+        when "1000" => OUTPUT <= "0000110";
+        -- J
+        when "1001" => OUTPUT <= "1000111";
+        -- null
+        when others => OUTPUT <= "1111111";
+    end case;
+    end process segment;
+end architecture behavioral;
