@@ -17,7 +17,11 @@ end entity trafficlight;
 architecture behavior of trafficlight is
     signal state: integer range 0 to 11;
     -- variable pre_status: integer := 0;
-    
+<<<<<<< bintang
+   
+    signal timeout: std_logic := '0'; -- flag : '1' if timeout in any state
+    signal Tl, Ts: std_logic := '0';  -- signals to trigger timer function : Tl - long time, Ts - short time
+>>>>>>> main
 
     begin
 
