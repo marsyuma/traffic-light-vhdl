@@ -15,7 +15,11 @@ entity trafficlight is
 end entity trafficlight;
 
 architecture behavior of trafficlight is
-    signal state: integer range 0 to 11;
+
+    constant waitingTime : integer := 45; --count 30 clock pulses 
+    constant yellowTime : integer := 10; --count 10 clock pulses
+    
+    signal state: integer range 0 to 4;
     -- variable pre_status: integer := 0;
 <<<<<<< bintang
    
