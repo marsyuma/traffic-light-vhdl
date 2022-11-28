@@ -15,23 +15,34 @@ entity trafficlight is
 end entity trafficlight;
 
 architecture behavior of trafficlight is
-
-    constant waitingTime : integer := 10; --Waktu tunggu lampu hijau dan merah
-    constant yellowTime : integer := 5; --Waktu tunggu lampu kuning
+    component lightcounter is
+        port(
+            clr: in std_logic;
+            clk: in std_logic;
+            switch: in std_logic_vector(1 downto 0);
+            status: out std_logic
+        );
+    end component lightcounter;
     
     signal state, nextState: integer range 0 to 8 := 0;
     -- state lampu;
-
-    signal timeout : std_logic := '0'; --condition untuk mengatur mode lampu
-    signal Tl, Ts: std_logic := '0';  -- sinyal untuk menentukan durasi waktu tunggu
+    signal status: std_logic;
+    signal switch : std_logic_vector(1 downto 0) := "00";  -- sinyal untuk menentukan durasi waktu tunggu
 
 begin
-    seq: process (clr, mode, timeout, clk)
+    UUT: lightcounter port map(
+        clr => clr,
+        clk => clk,
+        switch => switch,
+        status => status
+    );
+
+    seq: process (clr, mode, clk)
     begin
         if mode = '0' then
             if clr = '1' then
                 state <= 0;
-            elsif timeout = '1' and rising_edge(clk) then
+            elsif rising_edge(clk) then
                 state <= nextState;
             end if;
 
@@ -52,9 +63,9 @@ begin
     end process;
 
     -- Mode otomatis
-    comb: process (state)
+    comb: process (state, status)
     begin
-        Tl <= '0'; Ts <= '0';
+        switch <= "00";
         case state is
             when 0 =>
                 -- Timur hijau, sisanya merah, kuning mati semua
@@ -63,8 +74,13 @@ begin
                 yellow<= "0000";
 
                 -- start timer
-                Tl <= '1';
-            
+                switch <= "10";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
+
             when 1 =>
                 -- Transisi
                 -- Hijau mati semua, Timur dan Utara Kuning
@@ -74,7 +90,12 @@ begin
                 green <= "0000";
 
                 -- start timer
-                Ts <= '1';
+                switch <= "01";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
             
             when 2 =>
                 -- Utara hijau, sisanya merah, kuning mati semua
@@ -83,7 +104,12 @@ begin
                 yellow<= "0000";
 
                 --start timer
-                Tl <= '1';
+                switch <= "10";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
             
             when 3 =>
                 -- Transisi
@@ -94,7 +120,12 @@ begin
                 green <= "0000";
 
                 --start timer
-                Ts <= '1';
+                switch <= "01";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
 
             when 4 =>
                 -- Barat hijau, sisanya merah, kuning mati semua
@@ -103,7 +134,12 @@ begin
                 yellow<= "0000";
 
                 --start timer
-                Tl <= '1';
+                switch <= "10";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
             
             when 5 =>
                 -- Transisi
@@ -114,7 +150,12 @@ begin
                 green <= "0000";
 
                 --start timer
-                Ts <= '1';
+                switch <= "01";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
 
             when 6 =>
                 -- Selatan hijau, sisanya merah, kuning mati semua
@@ -123,7 +164,12 @@ begin
                 yellow<= "0000";
 
                 --start timer
-                Tl <= '1';
+                switch <= "10";
+                if(status = '1') then
+                    nextState <= (state + 1) mod 8;
+                else 
+                    nextState <= state;
+                end if;
             
             when 7 =>
                 -- Transisi
@@ -133,53 +179,21 @@ begin
                 green <= "0000";
 
                 --start timer
-                Ts <= '1';
-
+                switch <= "01";
+                if(status = '1') then
+                    nextState <= 0;
+                else 
+                    nextState <= state;
+                end if;
+            
             when 8 =>
-                -- Semua merah
-                green <= "0000";
+                -- Merah semua
                 red <= "1111";
-                yellow<= "0000";
-
-                --start timer
-                Tl <= '1';
-
+                green <= "0000";
+                yellow <= "0000";
+                nextState <= 0;
         end case;
     end process;
 
-    -- timer process
-    timer: process(Tl, Ts, clk)
-    variable count : integer;
-    begin
-        timeout <= '0';
-        count := 0;
-        if Tl = '1' then
-            for i in 1 to waitingTime loop
-                if rising_edge(clk) and count <= waitingTime then
-                    count := count + 1;
-                end if;
-                if count = waitingTime then
-                    nextState <= (state + 1) mod 8;
-                end if;
-                timeout <= '1';
-        end loop;
-        -- Tl <= '0';
-
-        elsif Ts = '1' then
-            -- timeout <= '0';
-            -- count := 0;
-            for i in 1 to yellowTime loop
-                if rising_edge(clk) and count <= yellowTime then
-                    count := count +1;
-                end if;
-                if count = yellowTime then
-                    nextState <= (state + 1) mod 8;
-                end if;
-        end loop;
-        timeout <= '1';
-		
-        -- Ts <= '0';
-        end if;
-    end process;
 end architecture;
 
