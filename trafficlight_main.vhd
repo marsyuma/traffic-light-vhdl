@@ -20,31 +20,34 @@ architecture behavior of trafficlight is
             clr: in std_logic;
             clk: in std_logic;
             switch: in std_logic_vector(1 downto 0);
-            status: out std_logic
+            status: inout integer range 0 to 1
         );
     end component lightcounter;
     
     signal state, nextState: integer range 0 to 8 := 0;
     -- state lampu;
-    signal status: std_logic;
+    signal status: integer range 0 to 1 := 0;
     signal switch : std_logic_vector(1 downto 0) := "00";  -- sinyal untuk menentukan durasi waktu tunggu
+    signal waitingTime :integer := 10;
+    signal yellowTime : integer := 5;
 
 begin
     UUT: lightcounter port map(
         clr => clr,
         clk => clk,
-        switch => switch,
+       switch => switch,
         status => status
-    );
+  );
 
-    seq: process (clr, mode, clk)
+    seq: process (clr, mode, clk, condition, state)
     begin
         if mode = '0' then
             if clr = '1' then
                 state <= 0;
-            elsif rising_edge(clk) then
+            else if rising_edge(clk) and status = 1 then
                 state <= nextState;
             end if;
+        end if;
 
         -- manual mode
         elsif mode = '1' then
@@ -75,11 +78,8 @@ begin
 
                 -- start timer
                 switch <= "10";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 1;
+            
 
             when 1 =>
                 -- Transisi
@@ -91,11 +91,8 @@ begin
 
                 -- start timer
                 switch <= "01";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 2;
+                
             
             when 2 =>
                 -- Utara hijau, sisanya merah, kuning mati semua
@@ -105,11 +102,7 @@ begin
 
                 --start timer
                 switch <= "10";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 3;
             
             when 3 =>
                 -- Transisi
@@ -121,11 +114,7 @@ begin
 
                 --start timer
                 switch <= "01";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 4;
 
             when 4 =>
                 -- Barat hijau, sisanya merah, kuning mati semua
@@ -135,11 +124,7 @@ begin
 
                 --start timer
                 switch <= "10";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 5;
             
             when 5 =>
                 -- Transisi
@@ -151,11 +136,7 @@ begin
 
                 --start timer
                 switch <= "01";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 6;
 
             when 6 =>
                 -- Selatan hijau, sisanya merah, kuning mati semua
@@ -165,11 +146,7 @@ begin
 
                 --start timer
                 switch <= "10";
-                if(status = '1') then
-                    nextState <= (state + 1) mod 8;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 7;
             
             when 7 =>
                 -- Transisi
@@ -180,11 +157,7 @@ begin
 
                 --start timer
                 switch <= "01";
-                if(status = '1') then
-                    nextState <= 0;
-                else 
-                    nextState <= state;
-                end if;
+                nextState <= 0;
             
             when 8 =>
                 -- Merah semua
