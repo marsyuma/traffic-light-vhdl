@@ -2,186 +2,170 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity trafficlight_main is
+entity trafficlight is
     port(
         clr: in std_logic;
         clk: in std_logic;
         mode: in std_logic;
-        button: in integer range 0 to 4 := 0;
+        condition : in integer range 0 to 4;
         green: out std_logic_vector(3 downto 0);
         yellow: out std_logic_vector(3 downto 0);
         red: out std_logic_vector(3 downto 0)
     );
-end entity trafficlight_main;
+end entity trafficlight;
 
-architecture behavior of trafficlight_main is
-    component SevSeg0 is
-        port (
-            in_sv0: in std_logic_vector(3 downto 0);
-            out_sv0: out std_logic_vector(6 downto 0)
+architecture behavior of trafficlight is
+    component lightcounter is
+        port(
+            clr: in std_logic;
+            clk: in std_logic;
+            switch: in std_logic_vector(1 downto 0);
+            status: inout integer range 0 to 1
         );
-    end component SevSeg0;
-
-    component SevSeg1 is
-        port (
-            in_sv1: in std_logic_vector(3 downto 0);
-            out_sv1: out std_logic_vector(6 downto 0)
-        );
-    end component SevSeg1;
+    end component lightcounter;
     
-    -- type arrayCounter is array (0 to 8) of integer;
-    -- signal counter: arrayCounter := (0, 0, 0, 0, 0, 0, 0, 0, 0);
     signal state, nextState: integer range 0 to 8 := 0;
-    signal counter: integer := 0;
-    signal in_sv0: std_logic_vector(3 downto 0);
-    signal out_sv0: std_logic_vector(6 downto 0);
-    signal in_sv1: std_logic_vector(3 downto 0);
-    signal out_sv1: std_logic_vector(6 downto 0);
-begin
-    SevSegment_Digit0 : SevSeg0 port map(
-        in_sv0 => in_sv0,
-        out_sv0 => out_sv0
-    ); 
+    -- state lampu;
+    signal status: integer range 0 to 1 := 0;
+    signal switch : std_logic_vector(1 downto 0) := "00";  -- sinyal untuk menentukan durasi waktu tunggu
+    signal waitingTime :integer := 10;
+    signal yellowTime : integer := 5;
 
-    SevSegment_Digit1 : SevSeg1 port map(
-        in_sv1 => in_sv1,
-        out_sv1 => out_sv1
-    ); 
-    
-    -- Proses Sinkronius
-    seq: process (clr, clk)
+begin
+    UUT: lightcounter port map(
+        clr => clr,
+        clk => clk,
+       switch => switch,
+        status => status
+  );
+
+    seq: process (clr, mode, clk, condition, state)
     begin
         if mode = '0' then
             if clr = '1' then
                 state <= 0;
-            elsif rising_edge(clk) then
+            else if rising_edge(clk) and status = 1 then
                 state <= nextState;
             end if;
-        
-        -- Mode Manual
+        end if;
+
+        -- manual mode
         elsif mode = '1' then
-            case button is
-                when 0 => state <= 8;
-                when 1 => state <= 0;
-                when 2 => state <= 2;
-                when 3 => state <= 4;
-                when 4 => state <= 6;
-                when others => null;
-            end case;
+            if condition = 0 then
+                state <= 8;
+            elsif condition = 1 then
+                state <= 0;
+            elsif condition = 2 then
+                state <= 2;
+            elsif condition = 3 then
+                state <= 4;
+            elsif condition = 4 then
+                state <= 6;
+            end if;
         end if;
     end process;
 
-    -- Mosde Otomatis
-    comb: process (state)
-        variable count: integer := 0;
-    begin    
+    -- Mode otomatis
+    comb: process (state, status)
+    begin
+        switch <= "00";
         case state is
-            -- Merah (15 sekon), Hijau (15 sekon), Kuning (5 sekon)
             when 0 =>
                 -- Timur hijau, sisanya merah, kuning mati semua
-                green <= "1000"; yellow <= "0000"; red <= "0111";
-                in_sv1 <= "0001"; in_sv0 <= "0101"; -- SvSeg = 15 sekon
-                for i in 1 to 15 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
+                green <= "1000"; 
+                red <= "0111"; 
+                yellow<= "0000";
+
+                -- start timer
+                switch <= "10";
                 nextState <= 1;
+            
 
             when 1 =>
                 -- Transisi
                 -- Hijau mati semua, Timur dan Utara Kuning
                 -- Barat dan Selatan Merah
-                green <= "0000"; yellow <= "1100"; red <= "0011";
-                in_sv0 <= "0000"; in_sv1 <= "0101"; -- SvSeg = 5 sekon
-                count := 0;
-                for i in 1 to 5 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
-                nextState <= 2;
+                yellow <= "1100";
+                red <= "0011";
+                green <= "0000";
 
+                -- start timer
+                switch <= "01";
+                nextState <= 2;
+                
+            
             when 2 =>
                 -- Utara hijau, sisanya merah, kuning mati semua
-                green <= "0100"; yellow <= "0000"; red <= "1011";
-                -- Display = 15 sekon
-                in_sv1 <= "0001"; in_sv0 <= "0101"; -- SvSeg = 15 sekon
-                count := 0;
-                for i in 1 to 15 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
-                nextState <= 3;
+                green <= "0100"; 
+                red <= "1011"; 
+                yellow<= "0000";
 
+                --start timer
+                switch <= "10";
+                nextState <= 3;
+            
             when 3 =>
                 -- Transisi
                 -- Hijau mati semua, Utara dan Barat Kuning
                 -- Timur dan Selatan Merah
-                green <= "0000"; yellow <= "0110"; red <= "1001";
-                in_sv0 <= "0000"; in_sv1 <= "0101"; -- SvSeg = 5 sekon
-                count := 0;
-                for i in 1 to 5 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
+                yellow <= "0110";
+                red <= "1001";
+                green <= "0000";
+
+                --start timer
+                switch <= "01";
                 nextState <= 4;
 
             when 4 =>
                 -- Barat hijau, sisanya merah, kuning mati semua
-                green <= "0010"; red <= "1101"; yellow <= "0000";
-                in_sv0 <= "0000"; in_sv1 <= "0101"; -- SvSeg = 5 sekon
-                count := 0;
-                for i in 1 to 5 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
-                nextState <= 5;
+                green <= "0010"; 
+                red <= "1101";
+                yellow<= "0000";
 
+                --start timer
+                switch <= "10";
+                nextState <= 5;
+            
             when 5 =>
                 -- Transisi
                 -- Hijau mati semua, Barat dan Selatan Kuning
                 -- Timur dan Utara Merah
-                green <= "0000"; yellow <= "0011"; red <= "1100";
-                in_sv0 <= "0000"; in_sv1 <= "0101"; -- SvSeg = 5 sekon
-                count := 0;
-                for i in 1 to 5 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
+                yellow <= "0011";
+                red <= "1100";
+                green <= "0000";
+
+                --start timer
+                switch <= "01";
                 nextState <= 6;
 
             when 6 =>
                 -- Selatan hijau, sisanya merah, kuning mati semua
-                green <= "0001"; yellow <= "0000"; red <= "1110";
-                in_sv1 <= "0001"; in_sv0 <= "0101"; -- SvSeg = 15 sekon
-                count := 0;
-                for i in 1 to 15 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
+                green <= "0001";
+                red <= "1110";
+                yellow<= "0000";
+
+                --start timer
+                switch <= "10";
                 nextState <= 7;
             
             when 7 =>
                 -- Transisi
                 -- Hijau mati semua, Selatan dan Timur Kuning
-                green <= "0000"; yellow <= "1001"; red <= "0110";
-                in_sv1 <= "0001"; in_sv0 <= "0101"; -- SvSeg = 15 sekon
-                count := 0;
-                for i in 1 to 15 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
-                nextState <= 8;
+                yellow <= "1001";
+                red <= "0110";
+                green <= "0000";
 
+                --start timer
+                switch <= "01";
+                nextState <= 0;
+            
             when 8 =>
                 -- Merah semua
-                green <= "0000"; yellow <= "0000"; red <= "1111";
-                in_sv1 <= "0001"; in_sv0 <= "0101"; -- SvSeg = 15 sekon
-                count := 0;
-                for i in 1 to 15 loop
-                    count := count + 1;
-                end loop;
-                counter <= count;
+                red <= "1111";
+                green <= "0000";
+                yellow <= "0000";
                 nextState <= 0;
         end case;
     end process;
+
 end architecture;
