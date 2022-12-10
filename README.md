@@ -7,8 +7,8 @@ Program ini memiliki fitur
 - LED penunjuk waktu lampu merah yang tersisa 
 
 TODO's
-- [ ] Membuat main program 	:page_facing_up:
-- [ ] Membuat testbench program 	:memo:
-- [ ] Mengimplementasikan semua modul :pushpin:
-- [ ] Membuat laporan dan README.md 	:clipboard:
-- [ ] Membuat presentasi :bar_chart:
+- [x] Membuat main program 	:page_facing_up:
+- [x] Membuat testbench program 	:memo:
+- [x] Mengimplementasikan semua modul :pushpin:
+- [x] Membuat laporan dan README.md 	:clipboard:
+- [x] Membuat presentasi :bar_chart:
