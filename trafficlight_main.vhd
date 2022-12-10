@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity trafficlight is
+entity trafficlight_main is
     port(
         clr: in std_logic;
         clk: in std_logic;
@@ -12,9 +12,9 @@ entity trafficlight is
         yellow: out std_logic_vector(3 downto 0);
         red: out std_logic_vector(3 downto 0)
     );
-end entity trafficlight;
+end entity trafficlight_main;
 
-architecture behavior of trafficlight is
+architecture behavior of trafficlight_main is
     component lightcounter is
         port(
             clr: in std_logic;
@@ -24,7 +24,8 @@ architecture behavior of trafficlight is
         );
     end component lightcounter;
     
-    signal state, nextState: integer range 0 to 8 := 0;
+    type stateType is (S0, S1, S2, S3, S4, S5, S6, S7, S8);
+    signal state, nextState: stateType;
     -- state lampu;
     signal status: integer range 0 to 1 := 0;
     signal switch : std_logic_vector(1 downto 0) := "00";  -- sinyal untuk menentukan durasi waktu tunggu
@@ -32,7 +33,7 @@ architecture behavior of trafficlight is
     signal yellowTime : integer := 5;
 
 begin
-    UUT: lightcounter port map(
+    timer: lightcounter port map(
         clr => clr,
         clk => clk,
        switch => switch,
@@ -43,7 +44,7 @@ begin
     begin
         if mode = '0' then
             if clr = '1' then
-                state <= 0;
+                state <= S0;
             else if rising_edge(clk) and status = 1 then
                 state <= nextState;
             end if;
@@ -52,15 +53,15 @@ begin
         -- manual mode
         elsif mode = '1' then
             if condition = 0 then
-                state <= 8;
+                state <= S8;
             elsif condition = 1 then
-                state <= 0;
+                state <= S0;
             elsif condition = 2 then
-                state <= 2;
+                state <= S2;
             elsif condition = 3 then
-                state <= 4;
+                state <= S4;
             elsif condition = 4 then
-                state <= 6;
+                state <= S6;
             end if;
         end if;
     end process;
@@ -70,7 +71,7 @@ begin
     begin
         switch <= "00";
         case state is
-            when 0 =>
+            when S0 =>
                 -- Timur hijau, sisanya merah, kuning mati semua
                 green <= "1000"; 
                 red <= "0111"; 
@@ -78,10 +79,10 @@ begin
 
                 -- start timer
                 switch <= "10";
-                nextState <= 1;
+                nextState <= S1;
             
 
-            when 1 =>
+            when S1 =>
                 -- Transisi
                 -- Hijau mati semua, Timur dan Utara Kuning
                 -- Barat dan Selatan Merah
@@ -91,10 +92,10 @@ begin
 
                 -- start timer
                 switch <= "01";
-                nextState <= 2;
+                nextState <= S2;
                 
             
-            when 2 =>
+            when S2 =>
                 -- Utara hijau, sisanya merah, kuning mati semua
                 green <= "0100"; 
                 red <= "1011"; 
@@ -102,9 +103,9 @@ begin
 
                 --start timer
                 switch <= "10";
-                nextState <= 3;
+                nextState <= S3;
             
-            when 3 =>
+            when S3 =>
                 -- Transisi
                 -- Hijau mati semua, Utara dan Barat Kuning
                 -- Timur dan Selatan Merah
@@ -114,9 +115,9 @@ begin
 
                 --start timer
                 switch <= "01";
-                nextState <= 4;
+                nextState <= S4;
 
-            when 4 =>
+            when S4 =>
                 -- Barat hijau, sisanya merah, kuning mati semua
                 green <= "0010"; 
                 red <= "1101";
@@ -124,9 +125,9 @@ begin
 
                 --start timer
                 switch <= "10";
-                nextState <= 5;
+                nextState <= S5;
             
-            when 5 =>
+            when S5 =>
                 -- Transisi
                 -- Hijau mati semua, Barat dan Selatan Kuning
                 -- Timur dan Utara Merah
@@ -136,9 +137,9 @@ begin
 
                 --start timer
                 switch <= "01";
-                nextState <= 6;
+                nextState <= S6;
 
-            when 6 =>
+            when S6 =>
                 -- Selatan hijau, sisanya merah, kuning mati semua
                 green <= "0001";
                 red <= "1110";
@@ -146,9 +147,9 @@ begin
 
                 --start timer
                 switch <= "10";
-                nextState <= 7;
+                nextState <= S7;
             
-            when 7 =>
+            when S7 =>
                 -- Transisi
                 -- Hijau mati semua, Selatan dan Timur Kuning
                 yellow <= "1001";
@@ -157,14 +158,14 @@ begin
 
                 --start timer
                 switch <= "01";
-                nextState <= 0;
+                nextState <= S0;
             
-            when 8 =>
+            when S8 =>
                 -- Merah semua
                 red <= "1111";
                 green <= "0000";
                 yellow <= "0000";
-                nextState <= 0;
+                
         end case;
     end process;
 
