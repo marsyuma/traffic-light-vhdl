@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity trafficlight_main is
+entity trafficlight is
     port(
         clr: in std_logic;
         clk: in std_logic;
@@ -12,9 +12,9 @@ entity trafficlight_main is
         yellow: out std_logic_vector(3 downto 0);
         red: out std_logic_vector(3 downto 0)
     );
-end entity trafficlight_main;
+end entity trafficlight;
 
-architecture behavior of trafficlight_main is
+architecture behavior of trafficlight is
     component lightcounter is
         port(
             clr: in std_logic;
