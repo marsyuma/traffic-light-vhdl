@@ -1,5 +1,6 @@
 # 🚦 Four-way Traffic Light in VHDL 🚦
 ▶ : https://youtu.be/cb8xoPKAAy8
+
 Four-way Traffic Light in VHDL Four Lane Junction Traffic Light Controller merupakan alat controller yang dapat membuat pengguna jalan tetap aman dalam berkendara di jalan. Karena di dalam controller ini terdapat controller secara otomatis dan manual sehingga Pihak kepolisian yang terdekat dapat mengatur lalu lintas yang ada. 
 Lampu lalu lintas yang menangani arus lalu lintas di persimpangan empat arah. Lampu lalu lintas ini dapat bekerja otomatis dan manual. Kerja manual ini dikontrol oleh pos polisi terdekat untuk keadaan-keadaan khusus seperti konvoi militer atau keadaan darurat . ini sangat membantu pihak berwajib dalam penanganan kasus kasus darurat di lalu lintas. Di controller ini dibuat control dalam seven segment yang menunjukkan angka countdown dalam lampu merah menuju kuning kemudian terakhir hijau. 
 
